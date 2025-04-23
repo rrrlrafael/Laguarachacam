@@ -1,4 +1,4 @@
- """
+"""
 app.py (Demo sin cámara física)
 Simula transmisión de video con una imagen fija para Render
 Autor: Rafael Rivas Ramón
