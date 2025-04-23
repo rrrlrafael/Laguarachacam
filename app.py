@@ -1,23 +1,27 @@
 """
 app.py
-GuarachaCam con transmisión en vivo + control de grabación desde botones
+GuarachaCam DEMO en Render con imagen fija + control de grabación por botones
 Autor: Rafael Rivas Ramón
 """
 
 import os
 import cv2
 import threading
+import numpy as np
 from flask import Flask, Response, render_template_string, redirect
 
 app = Flask(__name__)
 
-camera = cv2.VideoCapture(0)
 grabando = False
 grabador = None
 
-# HTML de la interfaz con botones
+# Crear imagen DEMO negra con texto
+frame_demo = np.zeros((360, 640, 3), dtype=np.uint8)
+cv2.putText(frame_demo, 'GuarachaCam DEMO', (50, 180), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
+
+# HTML con botones
 HTML_PAGINA = """
-<h2>🎥 GuarachaCam en Vivo</h2>
+<h2>🎥 GuarachaCam en Vivo (DEMO)</h2>
 <img src='/video'>
 <br><br>
 <form action='/iniciar'>
@@ -28,28 +32,20 @@ HTML_PAGINA = """
 </form>
 """
 
-# Grabar en segundo plano
 def grabar_video():
     global grabando, grabador
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    grabador = cv2.VideoWriter('guarachacam.avi', fourcc, 20.0, (640, 480))
+    grabador = cv2.VideoWriter('guarachacam.avi', fourcc, 20.0, (640, 360))
     while grabando:
-        ret, frame = camera.read()
-        if ret:
-            grabador.write(frame)
+        grabador.write(frame_demo)
     grabador.release()
 
-# Transmisión en vivo
 def generate_frames():
+    _, buffer = cv2.imencode('.jpg', frame_demo)
+    image_bytes = buffer.tobytes()
     while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + image_bytes + b'\r\n')
 
 @app.route('/')
 def index():
