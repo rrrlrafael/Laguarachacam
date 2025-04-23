@@ -1,6 +1,6 @@
 """
 app.py
-GuarachaCam DEMO en Render con imagen fija + control de grabación por botones
+GuarachaCam DEMO en Render con marca de agua + botones de grabación
 Autor: Rafael Rivas Ramón
 """
 
@@ -15,13 +15,14 @@ app = Flask(__name__)
 grabando = False
 grabador = None
 
-# Crear imagen DEMO negra con texto
+# Crear imagen DEMO con marca de agua
 frame_demo = np.zeros((360, 640, 3), dtype=np.uint8)
-cv2.putText(frame_demo, 'GuarachaCam DEMO', (50, 180), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
+cv2.putText(frame_demo, 'RRR DEMO EN VIVO', (40, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 3)
+cv2.putText(frame_demo, 'Probando desde Render', (40, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
 
 # HTML con botones
 HTML_PAGINA = """
-<h2>🎥 GuarachaCam en Vivo (DEMO)</h2>
+<h2>🎥 GuarachaCam DEMO</h2>
 <img src='/video'>
 <br><br>
 <form action='/iniciar'>
