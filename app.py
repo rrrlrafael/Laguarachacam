@@ -1,30 +1,30 @@
-app.py
-Transmisión en vivo para Render - GuarachaCam
+ """
+app.py (Demo sin cámara física)
+Simula transmisión de video con una imagen fija para Render
 Autor: Rafael Rivas Ramón
 """
 
 import os
-import cv2
 from flask import Flask, Response
+import cv2
+import numpy as np
 
 app = Flask(__name__)
 
-camera = cv2.VideoCapture(0)
+# Crear una imagen de prueba (negra con texto)
+frame = np.zeros((360, 640, 3), dtype=np.uint8)
+cv2.putText(frame, 'GuarachaCam DEMO', (50, 180), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
 
 def generate_frames():
+    _, buffer = cv2.imencode('.jpg', frame)
+    image_bytes = buffer.tobytes()
     while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + image_bytes + b'\r\n')
 
 @app.route('/')
 def index():
-    return "<h2>🔴 Transmisión en Vivo de GuarachaCam</h2><img src='/video'>"
+    return "<h2>🔴 DEMO en Vivo de GuarachaCam</h2><img src='/video'>"
 
 @app.route('/video')
 def video():
