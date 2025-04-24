@@ -1,6 +1,6 @@
 """
 app.py
-GuarachaCam DEMO en Render con imagen fija + control de grabación por botones
+GuarachaCam DEMO con verificación de grabación y mensajes en consola
 Autor: Rafael Rivas Ramón
 """
 
@@ -35,11 +35,22 @@ HTML_PAGINA = """
 
 def grabar_video():
     global grabando, grabador
+    print("[INFO] Iniciando grabación...")
+
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     grabador = cv2.VideoWriter('guarachacam.avi', fourcc, 20.0, (640, 360))
+
+    if not grabador.isOpened():
+        print("[ERROR] No se pudo abrir el archivo de video para grabar.")
+        grabando = False
+        return
+
     while grabando:
         grabador.write(frame_demo)
+        print("[INFO] Frame grabado...")
+
     grabador.release()
+    print("[INFO] Grabación finalizada y archivo guardado como 'guarachacam.avi'.")
 
 def generate_frames():
     _, buffer = cv2.imencode('.jpg', frame_demo)
