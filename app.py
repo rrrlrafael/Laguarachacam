@@ -17,7 +17,7 @@ grabador = None
 
 # Crear imagen DEMO con marca de agua
 frame_demo = np.zeros((360, 640, 3), dtype=np.uint8)
-cv2.putText(frame_demo, 'RRR DEMO EN VIVO', (40, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 3)
+cv2.putText(frame_demo, 'SABROSO EN VIVO', (40, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
 cv2.putText(frame_demo, 'Probando desde Render', (40, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
 
 # HTML con botones
