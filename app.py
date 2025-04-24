@@ -1,6 +1,6 @@
 """
 app.py
-GuarachaCam DEMO con verificación de grabación y mensajes en consola
+GuarachaCam DEMO con rastreo completo del proceso de grabación
 Autor: Rafael Rivas Ramón
 """
 
@@ -18,11 +18,11 @@ grabador = None
 # Crear imagen DEMO con marca de agua
 frame_demo = np.zeros((360, 640, 3), dtype=np.uint8)
 cv2.putText(frame_demo, 'SABROSO EN VIVO', (40, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
-cv2.putText(frame_demo, 'Probando desde Render', (40, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
+cv2.putText(frame_demo, 'Rastreo Activo', (40, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
 
 # HTML con botones
 HTML_PAGINA = """
-<h2>🎥 GuarachaCam DEMO</h2>
+<h2>🎥 GuarachaCam DEMO - Rastreo</h2>
 <img src='/video'>
 <br><br>
 <form action='/iniciar'>
@@ -35,8 +35,7 @@ HTML_PAGINA = """
 
 def grabar_video():
     global grabando, grabador
-    print("[INFO] Iniciando grabación...")
-
+    print("[INFO] Entrando a grabar_video()...")
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     grabador = cv2.VideoWriter('guarachacam.avi', fourcc, 20.0, (640, 360))
 
@@ -45,12 +44,13 @@ def grabar_video():
         grabando = False
         return
 
+    print("[INFO] Grabación iniciada correctamente.")
     while grabando:
         grabador.write(frame_demo)
         print("[INFO] Frame grabado...")
 
     grabador.release()
-    print("[INFO] Grabación finalizada y archivo guardado como 'guarachacam.avi'.")
+    print("[INFO] Grabación finalizada y archivo guardado.")
 
 def generate_frames():
     _, buffer = cv2.imencode('.jpg', frame_demo)
@@ -70,17 +70,29 @@ def video():
 @app.route('/iniciar')
 def iniciar_grabacion():
     global grabando
+    print("[INFO] Ruta /iniciar llamada.")
     if not grabando:
+        print("[INFO] Estado grabando = False. Iniciando hilo de grabación...")
         grabando = True
-        threading.Thread(target=grabar_video).start()
+        t = threading.Thread(target=grabar_video)
+        t.daemon = True
+        t.start()
+    else:
+        print("[INFO] Ya se estaba grabando.")
     return redirect('/')
 
 @app.route('/detener')
 def detener_grabacion():
     global grabando
-    grabando = False
+    print("[INFO] Ruta /detener llamada.")
+    if grabando:
+        grabando = False
+        print("[INFO] Grabación detenida por usuario.")
+    else:
+        print("[INFO] Ya estaba detenido.")
     return redirect('/')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
+    print(f"[INFO] Servidor Flask iniciado en puerto {port}")
     app.run(host='0.0.0.0', port=port)
