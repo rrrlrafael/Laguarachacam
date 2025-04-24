@@ -1,29 +1,25 @@
 """
 app.py
-GuarachaCam DEMO en Render con marca de agua + botones de grabación
+GuarachaCam DEMO en Render - muestra imagen fija con marca de agua
 Autor: Rafael Rivas Ramón
 """
 
 import os
 import cv2
-import threading
 import numpy as np
 from flask import Flask, Response, render_template_string, redirect
 
 app = Flask(__name__)
-
-grabando = False
-grabador = None
 
 # Crear imagen DEMO con marca de agua
 frame_demo = np.zeros((360, 640, 3), dtype=np.uint8)
 cv2.putText(frame_demo, 'RRR DEMO EN VIVO', (40, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 3)
 cv2.putText(frame_demo, 'Probando desde Render', (40, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
 
-# HTML con botones
+# HTML con imagen fija y botones
 HTML_PAGINA = """
-<h2>🎥 GuarachaCam DEMO</h2>
-<img src='/video'>
+<h2>🎥 GuarachaCam DEMO - Imagen Fija</h2>
+<img src='/foto'>
 <br><br>
 <form action='/iniciar'>
     <button type='submit'>🎬 Iniciar Grabación</button>
@@ -33,41 +29,21 @@ HTML_PAGINA = """
 </form>
 """
 
-def grabar_video():
-    global grabando, grabador
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    grabador = cv2.VideoWriter('guarachacam.avi', fourcc, 20.0, (640, 360))
-    while grabando:
-        grabador.write(frame_demo)
-    grabador.release()
-
-def generate_frames():
-    _, buffer = cv2.imencode('.jpg', frame_demo)
-    image_bytes = buffer.tobytes()
-    while True:
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + image_bytes + b'\r\n')
-
 @app.route('/')
 def index():
     return render_template_string(HTML_PAGINA)
 
-@app.route('/video')
-def video():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+@app.route('/foto')
+def foto():
+    _, buffer = cv2.imencode('.jpg', frame_demo)
+    return Response(buffer.tobytes(), mimetype='image/jpeg')
 
 @app.route('/iniciar')
 def iniciar_grabacion():
-    global grabando
-    if not grabando:
-        grabando = True
-        threading.Thread(target=grabar_video).start()
     return redirect('/')
 
 @app.route('/detener')
 def detener_grabacion():
-    global grabando
-    grabando = False
     return redirect('/')
 
 if __name__ == '__main__':
