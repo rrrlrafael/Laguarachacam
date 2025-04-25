@@ -1,5 +1,5 @@
 # app.py
-# GuarachaCam para Render con grabación temporal + alerta automática
+# GuarachaCam para Render con grabación temporal + alerta automática + pantalla de carga sabrosa
 # Autor: Rafael Rivas Ramón
 
 import os
@@ -19,7 +19,10 @@ cv2.putText(frame_demo, 'Render Activo', (40, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.
 
 HTML_PAGINA = """
 <h2>🎥 GuarachaCam Render</h2>
-<img src='/video'>
+<div id="loading">
+    <p>⏳ Cargando GuarachaCam... Por favor, espera un momento.</p>
+</div>
+<img id="video-stream" src='/video' style="display:none;">
 <br><br>
 <form action='/iniciar'>
     <button type='submit'>🎬 Iniciar Grabación</button>
@@ -27,6 +30,16 @@ HTML_PAGINA = """
 <form action='/detener'>
     <button type='submit'>🛑 Detener y Enviar Alerta</button>
 </form>
+
+<script>
+    const video = document.getElementById('video-stream');
+    const loading = document.getElementById('loading');
+
+    video.onload = function() {
+        loading.style.display = 'none';
+        video.style.display = 'block';
+    }
+</script>
 """
 
 def grabar_video():
