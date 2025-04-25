@@ -27,7 +27,7 @@ def render_pagina():
             <button type='submit'>📤 Enviar alerta a Telegram</button>
         </form>
         """
-    return f"""
+    return """
     <h2>🎥 GuarachaCam Render</h2>
     <div id="loading">
         <p>⏳ Cargando GuarachaCam... Por favor, espera un momento.</p>
@@ -40,7 +40,7 @@ def render_pagina():
     <form action='/detener'>
         <button type='submit'>🛑 Detener Grabación</button>
     </form>
-    {extra_button}
+    """ + extra_button + """
     <script>
         const video = document.getElementById('video-stream');
         const loading = document.getElementById('loading');
@@ -73,6 +73,13 @@ def grabar_video():
     else:
         print("[ERROR] ❌ Archivo .avi NO encontrado.")
 
+def generate_frames():
+    _, buffer = cv2.imencode('.jpg', frame_demo)
+    image_bytes = buffer.tobytes()
+    while True:
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + image_bytes + b'\r\n')
+
 @app.route('/')
 def index():
     return render_template_string(render_pagina())
@@ -80,13 +87,6 @@ def index():
 @app.route('/video')
 def video():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-def generate_frames():
-    _, buffer = cv2.imencode('.jpg', frame_demo)
-    image_bytes = buffer.tobytes()
-    while True:
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + image_bytes + b'\r\n')
 
 @app.route('/iniciar')
 def iniciar_grabacion():
