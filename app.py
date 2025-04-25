@@ -1,46 +1,56 @@
 # app.py
-# GuarachaCam para Render con grabación temporal + alerta automática + pantalla de carga sabrosa
+# GuarachaCam con botón de confirmación sabroso
 # Autor: Rafael Rivas Ramón
 
 import os
 import cv2
 import threading
 import numpy as np
-from flask import Flask, Response, render_template_string, redirect
+from flask import Flask, Response, render_template_string, redirect, request
 from RRR_envio_alerta import enviar_alerta
 
 app = Flask(__name__)
 grabando = False
 grabador = None
+alerta_pendiente = False
 
 frame_demo = np.zeros((360, 640, 3), dtype=np.uint8)
 cv2.putText(frame_demo, 'GUARACHACAM', (40, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 3)
 cv2.putText(frame_demo, 'Render Activo', (40, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
 
-HTML_PAGINA = """
-<h2>🎥 GuarachaCam Render</h2>
-<div id="loading">
-    <p>⏳ Cargando GuarachaCam... Por favor, espera un momento.</p>
-</div>
-<img id="video-stream" src='/video' style="display:none;">
-<br><br>
-<form action='/iniciar'>
-    <button type='submit'>🎬 Iniciar Grabación</button>
-</form>
-<form action='/detener'>
-    <button type='submit'>🛑 Detener y Enviar Alerta</button>
-</form>
+def render_pagina():
+    extra_button = ""
+    if alerta_pendiente:
+        extra_button = """
+        <br><br>
+        <form action='/enviar_alerta' method='post'>
+            <button type='submit'>📤 Enviar alerta a Telegram</button>
+        </form>
+        """
+    return f"""
+    <h2>🎥 GuarachaCam Render</h2>
+    <div id="loading">
+        <p>⏳ Cargando GuarachaCam... Por favor, espera un momento.</p>
+    </div>
+    <img id="video-stream" src='/video' style="display:none;">
+    <br><br>
+    <form action='/iniciar'>
+        <button type='submit'>🎬 Iniciar Grabación</button>
+    </form>
+    <form action='/detener'>
+        <button type='submit'>🛑 Detener Grabación</button>
+    </form>
+    {extra_button}
+    <script>
+        const video = document.getElementById('video-stream');
+        const loading = document.getElementById('loading');
 
-<script>
-    const video = document.getElementById('video-stream');
-    const loading = document.getElementById('loading');
-
-    video.onload = function() {
-        loading.style.display = 'none';
-        video.style.display = 'block';
-    }
-</script>
-"""
+        video.onload = function() {
+            loading.style.display = 'none';
+            video.style.display = 'block';
+        }
+    </script>
+    """
 
 def grabar_video():
     global grabando, grabador
@@ -58,6 +68,18 @@ def grabar_video():
 
     grabador.release()
     print("[INFO] Grabación finalizada.")
+    if os.path.exists('guarachacam.avi'):
+        print("[INFO] ✅ Archivo .avi encontrado.")
+    else:
+        print("[ERROR] ❌ Archivo .avi NO encontrado.")
+
+@app.route('/')
+def index():
+    return render_template_string(render_pagina())
+
+@app.route('/video')
+def video():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def generate_frames():
     _, buffer = cv2.imencode('.jpg', frame_demo)
@@ -65,14 +87,6 @@ def generate_frames():
     while True:
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + image_bytes + b'\r\n')
-
-@app.route('/')
-def index():
-    return render_template_string(HTML_PAGINA)
-
-@app.route('/video')
-def video():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/iniciar')
 def iniciar_grabacion():
@@ -84,11 +98,24 @@ def iniciar_grabacion():
 
 @app.route('/detener')
 def detener_grabacion():
-    global grabando
+    global grabando, alerta_pendiente
     if grabando:
         grabando = False
-        print("[INFO] Grabación detenida.")
-        enviar_alerta("🎥 ¡Grabación finalizada en GuarachaCam Render!")
+        alerta_pendiente = True
+        print("[INFO] Grabación detenida. Pendiente enviar alerta.")
+    return redirect('/')
+
+@app.route('/enviar_alerta', methods=['POST'])
+def enviar_alerta_telegram():
+    global alerta_pendiente
+    if alerta_pendiente:
+        alerta_pendiente = False
+        enviar_alerta(
+            "🎬 *GuarachaCam - Alerta de Movimiento*\n"
+            "🎥 *Video grabado:* guarachacam.avi\n"
+            "🚨 *Estado:* Finalizado y listo para revisión."
+        )
+        print("[INFO] ✅ Alerta enviada a Telegram.")
     return redirect('/')
 
 if __name__ == '__main__':
