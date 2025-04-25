@@ -4,33 +4,37 @@
 import requests
 import json
 
-TOKEN = "TU_TOKEN_DE_TELEGRAM"  # <-- reemplaza por tu token real
+# Reemplaza esto con tu token real de BotFather
+TOKEN = "TU_TOKEN_DE_TELEGRAM"
 
 def enviar_alerta(mensaje):
     try:
         with open("usuarios_telegram.json", "r", encoding="utf-8") as f:
             usuarios = json.load(f)
+        print("[INFO] ✅ usuarios_telegram.json cargado:", usuarios)
     except Exception as e:
-        print(f"[ERROR] No se pudo leer usuarios_telegram.json: {e}")
+        print(f"[ERROR] ❌ No se pudo leer usuarios_telegram.json: {e}")
         return
 
     for usuario in usuarios:
         user_id = usuario.get("user_id")
         username = usuario.get("username", "Desconocido")
 
+        print(f"[INFO] 🔄 Intentando enviar mensaje a @{username} (ID: {user_id})")
+
         if user_id:
             url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
             data = {
                 "chat_id": user_id,
-                "text": mensaje
+                "text": mensaje,
+                "parse_mode": "Markdown"
             }
 
             try:
                 response = requests.post(url, data=data)
                 if response.status_code == 200:
-                    print(f"[INFO] ✅ Mensaje enviado a @{username} ({user_id})")
+                    print(f"[INFO] ✅ Mensaje enviado correctamente a @{username} ({user_id})")
                 else:
-                    print(f"[ERROR] ❌ Fallo con @{username}: {response.text}")
+                    print(f"[ERROR] ❌ Error enviando a @{username} ({user_id}): {response.text}")
             except Exception as ex:
-                print(f"[ERROR] ❌ Error de conexión con @{username}: {ex}")
-
+                print(f"[ERROR] ❌ Excepción enviando a @{username} ({user_id}): {ex}")
