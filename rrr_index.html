@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>GuarachaCam 🎥</title>
+</head>
+<body>
+    <h1>GUARACHACAM - EN VIVO 🎥</h1>
+
+    <!-- Video en vivo -->
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+
+    <br><br>
+
+    <!-- Botones para grabar y detener -->
+    <button onclick="iniciarGrabacion()">🎥 Iniciar Grabación</button>
+    <button onclick="detenerGrabacion()">🛑 Detener Grabación</button>
+
+    <script>
+        function iniciarGrabacion() {
+            fetch('/iniciar_grabacion')
+                .then(response => console.log('Grabación iniciada'))
+                .catch(error => console.error('Error iniciando grabación:', error));
+        }
+
+        function detenerGrabacion() {
+            fetch('/detener_grabacion')
+                .then(response => console.log('Grabación detenida'))
+                .catch(error => console.error('Error deteniendo grabación:', error));
+        }
+    </script>
+</body>
+</html>
