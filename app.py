@@ -1,5 +1,5 @@
 # app.py
-# GuarachaCam Ultra Básico - Solo prueba de botones
+# GuarachaCam Ultra Básico - Botones con flush sabroso
 # Autor: Rafael Rivas Ramón
 
 import os
@@ -46,7 +46,7 @@ def index():
 def iniciar_grabacion():
     global grabando
     grabando = True
-    print("[INFO] 🎬 Botón INICIAR presionado.")
+    print("[INFO] 🎬 Botón INICIAR presionado.", flush=True)
     return redirect('/')
 
 @app.route('/detener')
@@ -55,7 +55,7 @@ def detener_grabacion():
     if grabando:
         grabando = False
         alerta_pendiente = True
-        print("[INFO] 🛑 Botón DETENER presionado.")
+        print("[INFO] 🛑 Botón DETENER presionado.", flush=True)
     return redirect('/')
 
 @app.route('/enviar_alerta', methods=['POST'])
@@ -63,7 +63,7 @@ def enviar_alerta_telegram():
     global alerta_pendiente
     if alerta_pendiente:
         alerta_pendiente = False
-        print("[INFO] 📤 Botón ENVIAR ALERTA presionado.")
+        print("[INFO] 📤 Botón ENVIAR ALERTA presionado.", flush=True)
     return redirect('/')
 
 if __name__ == '__main__':
